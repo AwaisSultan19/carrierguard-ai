@@ -59,10 +59,6 @@ export default function NotificationsPage() {
     }, 1000);
   };
 
-  const dismissAlert = (id: string) => {
-    setDismissed([...dismissed, id]);
-  };
-
   return (
     <div className="flex-1 flex flex-col overflow-y-auto">
       {/* Notification Feed Container */}
@@ -115,7 +111,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center gap-sm pt-sm">
                     <button className="px-lg py-2 bg-error text-white rounded-lg text-label-md font-semibold hover:bg-red-700 transition-colors shadow-sm">View Carrier</button>
                     <button 
-                      onClick={() => dismissAlert('alert-1')}
+                      onClick={() => handleDismiss('alert-1')}
                       className="px-lg py-2 text-on-surface-variant hover:bg-surface-container rounded-lg text-label-md font-semibold transition-colors"
                     >
                       Dismiss
@@ -147,7 +143,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center gap-sm pt-sm">
                     <button className="px-lg py-2 bg-primary text-white rounded-lg text-label-md font-semibold hover:bg-primary-container transition-colors shadow-sm">View Carrier</button>
                     <button 
-                      onClick={() => dismissAlert('alert-2')}
+                      onClick={() => handleDismiss('alert-2')}
                       className="px-lg py-2 text-on-surface-variant hover:bg-surface-container rounded-lg text-label-md font-semibold transition-colors"
                     >
                       Dismiss
@@ -187,7 +183,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center gap-sm pt-sm">
                     <button className="px-lg py-2 border border-outline-variant text-on-surface rounded-lg text-label-md font-semibold hover:bg-surface-container transition-colors">View Carrier</button>
                     <button 
-                      onClick={() => dismissAlert('alert-3')}
+                      onClick={() => handleDismiss('alert-3')}
                       className="px-lg py-2 text-on-surface-variant hover:bg-surface-container rounded-lg text-label-md font-semibold transition-colors"
                     >
                       Dismiss

@@ -75,7 +75,7 @@ export default function RiskReportPage() {
         </div>
         )}
 
-        {carrier && (<>
+        {carrier && (<div className="grid grid-cols-12 gap-x-lg gap-y-xl">
           {/* Executive Summary & Final Verdict */}
           <div className="col-span-12 md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl flex flex-col justify-between overflow-hidden relative">
             <div className="relative z-10">
@@ -270,7 +270,7 @@ export default function RiskReportPage() {
           </div>
 
           {/* Footer */}
-          <footer className="mt-2xl py-lg border-t border-outline-variant flex justify-between items-center text-on-surface-variant">
+          <footer className="col-span-12 mt-2xl py-lg border-t border-outline-variant flex justify-between items-center text-on-surface-variant">
             <div className="flex items-center gap-4">
               <img 
                 className="h-10 w-10 opacity-50" 
@@ -281,7 +281,7 @@ export default function RiskReportPage() {
             </div>
             <p className="text-label-sm whitespace-nowrap">&copy; 2024 CarrierGuard AI &bull; System Version 8.4.1</p>
           </footer>
-        </>)}
+        </div>)}
       </div>
     </div>
   );
