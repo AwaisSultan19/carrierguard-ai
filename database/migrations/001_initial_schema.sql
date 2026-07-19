@@ -57,16 +57,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
--- 6. Alerts (carrier monitoring)
-CREATE TABLE IF NOT EXISTS alerts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    carrier_check_id UUID REFERENCES carrier_checks(id) ON DELETE CASCADE,
-    type TEXT NOT NULL,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 7. Subscriptions (Stripe billing)
+-- 6. Subscriptions (Stripe billing)
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
@@ -82,27 +73,32 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE carrier_checks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies: users can only access their own data
+DROP POLICY IF EXISTS "Users can view own organization" ON organizations;
 CREATE POLICY "Users can view own organization" ON organizations
     FOR SELECT USING (
         id IN (SELECT organization_id FROM users WHERE clerk_id = current_setting('request.jwt.claims')::json->>'sub')
     );
 
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
 CREATE POLICY "Users can view own profile" ON users
     FOR SELECT USING (clerk_id = current_setting('request.jwt.claims')::json->>'sub');
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON users;
 CREATE POLICY "Users can insert own profile" ON users
     FOR INSERT WITH CHECK (clerk_id = current_setting('request.jwt.claims')::json->>'sub');
 
+DROP POLICY IF EXISTS "Users can view own carrier checks" ON carrier_checks;
 CREATE POLICY "Users can view own carrier checks" ON carrier_checks
     FOR SELECT USING (user_id = current_setting('request.jwt.claims')::json->>'sub');
 
+DROP POLICY IF EXISTS "Users can insert own carrier checks" ON carrier_checks;
 CREATE POLICY "Users can insert own carrier checks" ON carrier_checks
     FOR INSERT WITH CHECK (user_id = current_setting('request.jwt.claims')::json->>'sub');
 
+DROP POLICY IF EXISTS "Users can view own reports" ON reports;
 CREATE POLICY "Users can view own reports" ON reports
     FOR SELECT USING (
         carrier_check_id IN (
@@ -110,8 +106,10 @@ CREATE POLICY "Users can view own reports" ON reports
         )
     );
 
+DROP POLICY IF EXISTS "Users can view own audit logs" ON audit_logs;
 CREATE POLICY "Users can view own audit logs" ON audit_logs
     FOR SELECT USING (user_id = current_setting('request.jwt.claims')::json->>'sub');
 
+DROP POLICY IF EXISTS "Users can insert own audit logs" ON audit_logs;
 CREATE POLICY "Users can insert own audit logs" ON audit_logs
     FOR INSERT WITH CHECK (user_id = current_setting('request.jwt.claims')::json->>'sub');

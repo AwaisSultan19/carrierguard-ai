@@ -1,3 +1,9 @@
+export interface RiskFactor {
+  factor: string;
+  impact: number;
+  description: string;
+}
+
 export interface Carrier {
   dotNumber: string;
   mcNumber: string;
@@ -12,6 +18,8 @@ export interface Carrier {
   safetyRatingDate: string;
   reviewDate: string;
   authorityStatus: string;
+  authorityType: string;
+  authorityAge: string;
   outOfServiceRate: string;
   outOfServiceNationalAvg: string;
   driverOOSRate: string;
@@ -32,6 +40,11 @@ export interface Carrier {
   operationType: string;
   cargoTypes: string[];
   riskScore: number;
+  riskBreakdown: RiskFactor[];
+  recommendation: string;
+  oosComparison: string;
+  lastUpdated: string;
+  dataSource: string;
   aiSummary: string;
 }
 
@@ -75,7 +88,7 @@ async function request<T>(path: string, options?: RequestInit & { token?: string
 
   const res = await fetch(`${API_BASE}${path}`, {
     headers,
-    body: reqBody ? JSON.stringify(reqBody) : undefined,
+    body: reqBody ?? undefined,
     ...fetchOptions,
   });
 
@@ -121,6 +134,7 @@ export interface DashboardStats {
   highRiskAlerts: number;
   complianceRate: number;
   pendingAudits: number;
+  averageRiskScore: number;
   recentChecks: {
     id: string;
     carrier_name: string;
@@ -143,10 +157,6 @@ export async function getDashboardStats(token?: string | null): Promise<Dashboar
 export interface UserProfile {
   name: string;
   email: string;
-  preferences?: { email_alerts: boolean; push: boolean; desktop: boolean };
-  language?: string;
-  timezone?: string;
-  theme?: string;
 }
 
 export async function getUserProfile(token?: string | null): Promise<UserProfile> {
@@ -157,66 +167,15 @@ export async function updateUserProfile(data: Partial<UserProfile>, token?: stri
   return request<UserProfile>('/users/me', { method: 'PATCH', body: JSON.stringify(data), token });
 }
 
-export interface AlertItem {
-  id: string;
-  type: string;
-  status: string;
-  created_at: string;
-  carrier_name?: string;
-  message?: string;
-  severity?: string;
-}
-
-export async function getAlerts(token?: string | null): Promise<AlertItem[]> {
-  return request<AlertItem[]>('/alerts', { token });
-}
-
-export async function dismissAlert(id: string, token?: string | null): Promise<void> {
-  await request<null>(`/alerts/${id}/dismiss`, { method: 'PATCH', token });
-}
-
-export interface Organization {
-  name: string;
-  domain: string;
-}
-
-export interface OrgMember {
-  name: string;
-  email: string;
-}
-
-export async function getOrganization(token?: string | null): Promise<Organization> {
-  return request<Organization>('/organization', { token });
-}
-
-export async function getOrgMembers(token?: string | null): Promise<OrgMember[]> {
-  return request<OrgMember[]>('/organization/members', { token });
-}
-
-export interface Subscription {
-  plan: string;
-  status: string;
-  usage: number;
-  limit: number;
-}
-
-export async function getSubscription(token?: string | null): Promise<Subscription> {
-  return request<Subscription>('/billing/subscription', { token });
-}
-
-export async function emailReport(email: string, dotNumber?: string, mcNumber?: string, token?: string | null): Promise<void> {
-  await request('/reports/email', {
-    method: 'POST',
-    body: { email, dotNumber, mcNumber },
-    token,
-  });
-}
-
 export function getPdfDownloadUrl(dotNumber?: string, mcNumber?: string): string {
   const params = new URLSearchParams();
   if (dotNumber) params.set('dotNumber', dotNumber);
   if (mcNumber) params.set('mcNumber', mcNumber);
   return `${API_BASE}/reports/pdf?${params.toString()}`;
+}
+
+export async function clearSearchHistory(token?: string | null): Promise<void> {
+  await request<null>('/carrier/history', { method: 'DELETE', token });
 }
 
 export { ApiError };

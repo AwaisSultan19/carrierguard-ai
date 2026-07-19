@@ -4,10 +4,7 @@ const cors = require('cors');
 const carrierRoutes = require('./routes/carrier');
 const dashboardRoutes = require('./routes/dashboard');
 const usersRoutes = require('./routes/users');
-const alertsRoutes = require('./routes/alerts');
 const reportsRoutes = require('./routes/reports');
-const organizationRoutes = require('./routes/organization');
-const billingRoutes = require('./routes/billing');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -26,11 +23,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/carrier', carrierRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/alerts', alertsRoutes);
 app.use('/api/reports', reportsRoutes);
-app.use('/api/organization', organizationRoutes);
-app.use('/api/billing', billingRoutes);
-
 app.use(errorHandler);
 
 app.listen(PORT, () => {

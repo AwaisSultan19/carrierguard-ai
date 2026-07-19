@@ -15,6 +15,14 @@ function generateCarrierReport(carrier) {
     const yellow = '#ca8a04';
     const red = '#dc2626';
 
+    // Insert logo
+    try {
+      const path = require('path');
+      doc.image(path.join(__dirname, '..', '..', 'logo.png'), 50, 45, { width: 32 });
+    } catch (e) {
+      // Logo file not found — skip
+    }
+
     doc.font('Helvetica-Bold').fontSize(22).fillColor(primary).text('CarrierGuard AI', { continued: false });
     doc.fontSize(10).fillColor(gray).text('Carrier Compliance Report', { continued: false });
     doc.text(`  |  ${new Date().toLocaleDateString()}`, { align: 'right' });

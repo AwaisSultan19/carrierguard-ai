@@ -89,4 +89,16 @@ async function getSearchHistory(req, res, next) {
   }
 }
 
-module.exports = { searchCarrier, getCarrierById, getSearchHistory };
+async function clearSearchHistory(req, res, next) {
+  try {
+    await supabaseService.clearSearchHistory(req.userId);
+    res.json({
+      success: true,
+      data: { message: 'Search history cleared' },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { searchCarrier, getCarrierById, getSearchHistory, clearSearchHistory };

@@ -101,30 +101,6 @@ export default function RiskReportPage() {
             </div>
           </div>
 
-          {/* Confidence Score */}
-          <div className="col-span-12 md:col-span-4 bg-primary text-on-primary rounded-xl p-xl flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden">
-            <div className="relative z-10">
-              <p className="text-label-sm font-bold uppercase tracking-widest mb-md opacity-80">AI Confidence Score</p>
-              <div className="relative inline-flex items-center justify-center mb-md">
-                <svg className="w-32 h-32 transform -rotate-90">
-                  <circle cx="64" cy="64" fill="transparent" r="58" stroke="rgba(255,255,255,0.1)" strokeWidth="8"></circle>
-                  <circle 
-                    className="text-on-primary" 
-                    cx="64" cy="64" 
-                    fill="transparent" r="58" 
-                    stroke="currentColor" 
-                    strokeDasharray="364.4" 
-                    strokeDashoffset="7.2" 
-                    strokeWidth="8"
-                  ></circle>
-                </svg>
-                <span className="absolute font-display text-h1">98%</span>
-              </div>
-              <p className="text-body-sm font-medium">Model: CG-Sentinel v4.2</p>
-              <p className="text-[10px] uppercase mt-1 opacity-60">Verified via Blockchain Hash 0x92f...4a</p>
-            </div>
-          </div>
-
           {/* Risk Score Breakdown */}
           <div className="col-span-12 md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-xl">
             <h3 className="font-h3 text-h3 mb-xl">Risk Score Breakdown</h3>

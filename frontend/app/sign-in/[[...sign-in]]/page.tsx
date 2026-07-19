@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { SignIn } from "@clerk/nextjs";
 
 export default function SignInPage() {
@@ -8,9 +9,7 @@ export default function SignInPage() {
     <div className="min-h-screen flex items-center justify-center p-gutter bg-background">
       <main className="w-full max-w-[448px]">
         <div className="flex flex-col items-center mb-xl">
-          <div className="w-12 h-12 bg-primary flex items-center justify-center rounded-xl mb-md">
-            <span className="material-symbols-outlined text-on-primary text-[28px]">security</span>
-          </div>
+          <Image src="/logo.png" alt="CarrierGuard AI" width={48} height={48} className="mb-md rounded-xl" />
           <h1 className="font-h2 text-h2 text-on-surface tracking-tight">CarrierGuard AI</h1>
           <p className="font-body-sm text-body-sm text-on-surface-variant mt-xs">Enterprise Logistics Vetting</p>
         </div>

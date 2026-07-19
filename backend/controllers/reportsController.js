@@ -1,6 +1,5 @@
 const fmcsaService = require('../services/fmcsaService');
 const pdfService = require('../services/pdfService');
-const emailService = require('../services/emailService');
 
 async function generateReport(req, res, next) {
   try {
@@ -32,17 +31,4 @@ async function downloadPdf(req, res, next) {
   } catch (err) { next(err); }
 }
 
-async function emailReport(req, res, next) {
-  try {
-    const { email, dotNumber, mcNumber } = req.body;
-    if (!email || (!dotNumber && !mcNumber)) {
-      const err = new Error('Email and DOT or MC number required');
-      err.statusCode = 400;
-      throw err;
-    }
-    const result = await emailService.sendCarrierReport(email, dotNumber, mcNumber);
-    res.json({ success: true, data: result });
-  } catch (err) { next(err); }
-}
-
-module.exports = { generateReport, downloadPdf, emailReport };
+module.exports = { generateReport, downloadPdf };
