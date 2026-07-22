@@ -31,13 +31,13 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="h-16 w-full sticky top-0 z-40 bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline shadow-sm flex justify-between items-center px-gutter">
-        <div className="flex items-center gap-md">
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden mr-sm w-9 h-9 rounded-lg flex items-center justify-center hover:bg-surface-container transition-colors">
-            <span className="material-symbols-outlined text-on-surface">{mobileOpen ? 'close' : 'menu'}</span>
+      <header className="h-16 w-full sticky top-0 z-40 bg-gray-950/80 backdrop-blur-xl border-b border-gray-800/50 flex justify-between items-center px-6">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-800/50 transition-colors">
+            <span className="material-symbols-outlined text-gray-300">{mobileOpen ? 'close' : 'menu'}</span>
           </button>
-          <h2 className="font-h3 text-h3 font-semibold text-on-surface dark:text-inverse-on-surface">{getPageTitle()}</h2>
-          <div className="px-sm py-xs bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase tracking-widest">Enterprise</div>
+          <h2 className="text-lg font-semibold text-white">{getPageTitle()}</h2>
+          <div className="px-2.5 py-1 bg-orange-500/10 text-orange-400 rounded text-[10px] font-bold uppercase tracking-widest border border-orange-500/20">Enterprise</div>
         </div>
         <div className="flex items-center gap-2">
           {isLoaded && user ? (
@@ -49,7 +49,7 @@ export default function TopNav() {
               }}
             />
           ) : (
-            <Link href="/sign-in" className="flex items-center gap-1.5 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:brightness-110 transition-all shadow-sm">
+            <Link href="/sign-in" className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-400 transition-all shadow-sm">
               <span className="material-symbols-outlined text-lg">login</span>
               Sign In
             </Link>
@@ -59,31 +59,22 @@ export default function TopNav() {
 
       {mobileOpen && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
-          <aside className="fixed top-16 left-0 bottom-0 w-[280px] bg-surface z-50 border-r border-outline-variant flex flex-col py-md px-md shadow-2xl lg:hidden">
+          <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
+          <aside className="fixed top-16 left-0 bottom-0 w-[280px] bg-gray-950 z-50 border-r border-gray-800 flex flex-col py-4 px-4 shadow-2xl lg:hidden">
             <nav className="flex-1 space-y-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.path;
                 return (
                   <Link key={item.path} href={item.path} onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-md px-md py-sm rounded-lg transition-colors ${
-                      isActive ? 'text-primary font-bold bg-surface-container border-r-2 border-primary' : 'text-on-surface-variant hover:bg-surface-container'
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${
+                      isActive ? 'text-orange-400 font-semibold bg-orange-500/10 border-r-2 border-orange-500' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
                     }`}>
-                    <span className="material-symbols-outlined">{item.icon}</span>
-                    <span className="font-body-md">{item.name}</span>
+                    <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                    <span className="text-sm">{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
-            <div className="mt-auto pt-xl border-t border-outline-variant">
-              {!isLoaded || !user ? (
-                <Link href="/sign-in" onClick={() => setMobileOpen(false)}
-                  className="w-full flex items-center gap-md p-md bg-primary-container/30 rounded-xl text-primary font-semibold">
-                  <span className="material-symbols-outlined">login</span>
-                  Sign In
-                </Link>
-              ) : null}
-            </div>
           </aside>
         </>
       )}

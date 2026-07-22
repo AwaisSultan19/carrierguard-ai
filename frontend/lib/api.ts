@@ -178,4 +178,8 @@ export async function clearSearchHistory(token?: string | null): Promise<void> {
   await request<null>('/carrier/history', { method: 'DELETE', token });
 }
 
+export async function completeOnboarding(data: { company_name?: string; role?: string }, token?: string | null): Promise<UserProfile> {
+  return request<UserProfile>('/users/onboarding', { method: 'POST', body: JSON.stringify(data), token });
+}
+
 export { ApiError };

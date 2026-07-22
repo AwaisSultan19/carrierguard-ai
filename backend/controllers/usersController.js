@@ -14,4 +14,11 @@ async function updateProfile(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getProfile, updateProfile };
+async function completeOnboarding(req, res, next) {
+  try {
+    const profile = await supabaseService.completeOnboarding(req.userId, req.body);
+    res.json({ success: true, data: profile });
+  } catch (err) { next(err); }
+}
+
+module.exports = { getProfile, updateProfile, completeOnboarding };

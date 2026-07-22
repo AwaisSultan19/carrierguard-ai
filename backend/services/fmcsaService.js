@@ -642,29 +642,53 @@ function mapSaferWebAPICarrier(d) {
 }
 
 async function searchCarrier({ mcNumber, dotNumber }) {
-  if (SAFERWEBAPI_KEY && SAFERWEBAPI_KEY !== 'YOUR_API_KEY_HERE') {
-    const carrier = await searchViaSaferWebAPI({ mcNumber, dotNumber });
-    carrier.aiSummary = await geminiService.generateSummary(carrier);
-    return carrier;
-  }
+  const label = mcNumber ? `MC-${mcNumber.replace(/^MC-?/i, '')}` : `DOT ${dotNumber}`;
+  let lastError = null;
 
-  let carrier;
-  if (FMCSA_API_KEY) {
+  // 1. Try SaferWebAPI first (richest data)
+  if (SAFERWEBAPI_KEY && SAFERWEBAPI_KEY !== 'YOUR_API_KEY_HERE') {
     try {
-      carrier = await searchViaFMCSA({ mcNumber, dotNumber });
+      const carrier = await searchViaSaferWebAPI({ mcNumber, dotNumber });
       carrier.aiSummary = await geminiService.generateSummary(carrier);
       return carrier;
     } catch (err) {
-      console.warn('FMCSA lookup failed, falling back to DotLookup:', err.message);
+      console.warn(`SaferWebAPI lookup failed for ${label}:`, err.message);
+      lastError = err;
     }
   }
 
-  try {
-    carrier = await searchViaDotLookup({ dotNumber, mcNumber });
-  } catch (err) {
-    console.warn('DotLookup lookup failed, using mock data:', err.message);
-    carrier = generateMockCarrierData({ mcNumber, dotNumber });
+  // 2. Fall back to FMCSA official API
+  if (FMCSA_API_KEY) {
+    try {
+      const carrier = await searchViaFMCSA({ mcNumber, dotNumber });
+      carrier.aiSummary = await geminiService.generateSummary(carrier);
+      return carrier;
+    } catch (err) {
+      console.warn(`FMCSA lookup failed for ${label}:`, err.message);
+      lastError = err;
+    }
   }
+
+  // 3. Fall back to DotLookup (does not require an API key)
+  try {
+    const carrier = await searchViaDotLookup({ dotNumber, mcNumber });
+    if (!carrier.aiSummary) {
+      carrier.aiSummary = await geminiService.generateSummary(carrier);
+    }
+    return carrier;
+  } catch (err) {
+    console.warn(`DotLookup lookup failed for ${label}:`, err.message);
+    lastError = err;
+  }
+
+  // 4. Last resort: generate deterministic mock data so the UI is never empty
+  //    Only use mock data when the request did not explicitly result in "not found".
+  if (lastError && lastError.statusCode === 404) {
+    throw lastError;
+  }
+
+  console.warn(`All carrier lookup providers failed for ${label}. Using mock fallback.`);
+  const carrier = generateMockCarrierData({ mcNumber, dotNumber });
   if (!carrier.aiSummary) {
     carrier.aiSummary = await geminiService.generateSummary(carrier);
   }

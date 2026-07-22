@@ -28,7 +28,6 @@ export default function CarrierSearchPage() {
     { icon: 'task_alt', label: 'Preparing carrier report...' },
   ];
 
-  // Advance scan steps
   useEffect(() => {
     if (searchState !== 'loading') { setScanStep(0); return; }
     if (scanStep >= SCAN_STEPS.length) return;
@@ -37,7 +36,6 @@ export default function CarrierSearchPage() {
     return () => clearTimeout(timer);
   }, [searchState, scanStep]);
 
-  // Transition when scan finishes + API resolved
   useEffect(() => {
     if (searchState !== 'loading') return;
     if (scanStep >= SCAN_STEPS.length && apiResolved) {
@@ -60,9 +58,7 @@ export default function CarrierSearchPage() {
       const token = await getToken();
       const history = await getSearchHistory(6, token);
       setRecentSearches(history);
-    } catch {
-      // Silently fail - history is optional
-    }
+    } catch {}
   }, [getToken]);
 
   useEffect(() => {
@@ -78,6 +74,8 @@ export default function CarrierSearchPage() {
     setSearchState('loading');
     setErrorMessage('');
     setCarrierResult(null);
+    setApiResolved(false);
+    setApiSuccess(false);
 
     try {
       const token = await getToken();
@@ -111,9 +109,9 @@ export default function CarrierSearchPage() {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 70) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 40) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 70) return 'text-green-400 bg-green-500/10 border-green-500/30';
+    if (score >= 40) return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30';
+    return 'text-red-400 bg-red-500/10 border-red-500/30';
   };
 
   const getScoreBg = (score: number) => {
@@ -125,24 +123,24 @@ export default function CarrierSearchPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
-        return <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">Active</span>;
+        return <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-[10px] font-bold uppercase">Active</span>;
       case 'NOT_AUTHORIZED':
-        return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase">Not Authorized</span>;
+        return <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px] font-bold uppercase">Not Authorized</span>;
       case 'OUT_OF_SERVICE':
-        return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase">Out of Service</span>;
+        return <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px] font-bold uppercase">Out of Service</span>;
       case 'REVOKED':
-        return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase">Revoked</span>;
+        return <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px] font-bold uppercase">Revoked</span>;
       default:
-        return <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold uppercase">Pending</span>;
+        return <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-400 rounded text-[10px] font-bold uppercase">Pending</span>;
     }
   };
 
   const getRecommendationStyle = (rec: string) => {
     switch (rec) {
-      case 'Approve': return { bg: 'bg-green-500', text: 'text-green-700', bgLight: 'bg-green-50', border: 'border-green-200', icon: 'check_circle' };
-      case 'Review': return { bg: 'bg-yellow-500', text: 'text-yellow-700', bgLight: 'bg-yellow-50', border: 'border-yellow-200', icon: 'rate_review' };
-      case 'Reject': return { bg: 'bg-red-500', text: 'text-red-700', bgLight: 'bg-red-50', border: 'border-red-200', icon: 'cancel' };
-      default: return { bg: 'bg-gray-500', text: 'text-gray-700', bgLight: 'bg-gray-50', border: 'border-gray-200', icon: 'help' };
+      case 'Approve': return { bg: 'bg-green-500', text: 'text-green-400', bgLight: 'bg-green-500/10', border: 'border-green-500/30', icon: 'check_circle' };
+      case 'Review': return { bg: 'bg-yellow-500', text: 'text-yellow-400', bgLight: 'bg-yellow-500/10', border: 'border-yellow-500/30', icon: 'rate_review' };
+      case 'Reject': return { bg: 'bg-red-500', text: 'text-red-400', bgLight: 'bg-red-500/10', border: 'border-red-500/30', icon: 'cancel' };
+      default: return { bg: 'bg-gray-500', text: 'text-gray-400', bgLight: 'bg-gray-800', border: 'border-gray-700', icon: 'help' };
     }
   };
 
@@ -152,81 +150,84 @@ export default function CarrierSearchPage() {
   };
 
   return (
-    <div className="flex-1 p-gutter max-w-7xl mx-auto w-full space-y-xl">
-      <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-xl shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-xl items-end">
-          <div className="md:col-span-4 space-y-sm">
-            <label className="font-label-md text-on-surface-variant flex items-center gap-xs">
-              MC Number
-              <span className="material-symbols-outlined text-sm">info</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">tag</span>
-              <input
-                type="text"
-                value={mcNumber}
-                onChange={(e) => setMcNumber(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-12 pl-11 pr-md bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-outline/50"
-                placeholder="e.g. 1234567"
-              />
+    <div className="flex-1 px-6 py-8 w-full bg-gray-950">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-gray-100 tracking-tight">Search Carriers</h1>
+        <p className="text-sm text-gray-400 mt-1.5">
+          Look up any carrier by MC or DOT number for a full compliance report.
+        </p>
+      </div>
+
+      <div className="bg-gray-900/60 border border-gray-800 rounded-xl shadow-sm mb-8">
+        <div className="p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end flex-1 w-full">
+              <div className="sm:col-span-5">
+                <label className="block text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1.5">
+                  MC Number
+                </label>
+                <input
+                  type="text"
+                  value={mcNumber}
+                  onChange={(e) => setMcNumber(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="block w-full h-10 px-3.5 text-sm text-gray-100 placeholder:text-gray-500 bg-gray-900/80 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all"
+                  placeholder="1234567"
+                />
+              </div>
+              <div className="sm:col-span-5">
+                <label className="block text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1.5">
+                  DOT Number
+                </label>
+                <input
+                  type="text"
+                  value={dotNumber}
+                  onChange={(e) => setDotNumber(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="block w-full h-10 px-3.5 text-sm text-gray-100 placeholder:text-gray-500 bg-gray-900/80 border border-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all"
+                  placeholder="0987654"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <button
+                  onClick={handleSearch}
+                  disabled={searchState === 'loading'}
+                  className="w-full h-10 text-sm font-medium text-white bg-orange-500 hover:bg-orange-400 active:scale-[0.98] rounded-lg transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {searchState === 'loading' ? 'Searching...' : 'Search'}
+                </button>
+              </div>
             </div>
           </div>
-          <div className="md:col-span-4 space-y-sm">
-            <label className="font-label-md text-on-surface-variant flex items-center gap-xs">
-              DOT Number
-              <span className="material-symbols-outlined text-sm">info</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-md top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">domain</span>
-              <input
-                type="text"
-                value={dotNumber}
-                onChange={(e) => setDotNumber(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-12 pl-11 pr-md bg-surface-container-low border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all placeholder:text-outline/50"
-                placeholder="e.g. 0987654"
-              />
-            </div>
-          </div>
-          <div className="md:col-span-4">
-            <button
-              onClick={handleSearch}
-              disabled={searchState === 'loading'}
-              className="w-full h-12 bg-primary-container hover:brightness-110 text-on-primary font-bold rounded-lg shadow-lg shadow-primary-container/20 transition-all flex items-center justify-center gap-md active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <span className="material-symbols-outlined">{searchState === 'loading' ? 'hourglass_top' : 'search'}</span>
-              {searchState === 'loading' ? 'Searching...' : 'Search Carrier'}
-            </button>
+
+          <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-gray-800">
+            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Quick:</span>
+            <button className="px-3 py-1 text-xs font-medium text-gray-400 bg-gray-800/50 border border-gray-700 rounded-full hover:bg-gray-700 transition-colors">Active Authority</button>
+            <button className="px-3 py-1 text-xs font-medium text-gray-400 bg-gray-800/50 border border-gray-700 rounded-full hover:bg-gray-700 transition-colors">Safety: Satisfactory</button>
+            <button className="px-3 py-1 text-xs font-medium text-gray-400 bg-gray-800/50 border border-gray-700 rounded-full hover:bg-gray-700 transition-colors">Hazmat Certified</button>
           </div>
         </div>
-        <div className="mt-md flex flex-wrap gap-md items-center text-body-sm text-on-surface-variant">
-          <span className="font-semibold">Quick Filters:</span>
-          <button className="px-md py-1 bg-surface-container rounded-full hover:bg-secondary-container transition-colors border border-outline-variant/30">Active Authority</button>
-          <button className="px-md py-1 bg-surface-container rounded-full hover:bg-secondary-container transition-colors border border-outline-variant/30">Safety Rating: Satisfactory</button>
-          <button className="px-md py-1 bg-surface-container rounded-full hover:bg-secondary-container transition-colors border border-outline-variant/30">Hazmat Certified</button>
-        </div>
-      </section>
+      </div>
 
-      <div className="space-y-xl">
-        {searchState === 'empty' && !carrierResult && (
-          <div className="flex flex-col items-center justify-center py-2xl text-center">
-            <div className="w-18 h-18 bg-primary-container rounded-3xl flex items-center justify-center mb-xl shadow-lg shadow-primary-container/30">
-              <span className="material-symbols-outlined text-primary text-4xl">search_insights</span>
-            </div>
-            <h2 className="font-h2 text-h2 text-on-surface mb-sm font-bold">Ready to VET your next carrier?</h2>
-            <p className="text-on-surface-variant max-w-lg mx-auto leading-relaxed text-body-md">
-              Enter an MC or DOT number above to pull deep-dive safety data, insurance verifications, and real-time authority status.
-            </p>
+      {searchState === 'empty' && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 bg-gray-800 rounded-2xl flex items-center justify-center mb-6">
+            <span className="material-symbols-outlined text-gray-400 text-3xl">search_insights</span>
           </div>
-        )}
+          <h2 className="text-lg font-semibold text-gray-100 mb-2">Ready to vet a carrier?</h2>
+          <p className="text-sm text-gray-400 leading-relaxed">
+            Enter an MC or DOT number above to pull safety data, insurance records, and real-time authority status.
+          </p>
+        </div>
+      )}
 
+      <div className="space-y-8">
         {searchState === 'loading' && (
-          <div className="border border-outline-variant/80 rounded-xl bg-surface-container-lowest overflow-hidden relative shadow-lg shadow-primary/5">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm relative">
             <style>{`
               @keyframes scanGlow {
-                0%, 100% { box-shadow: 0 0 20px rgba(37,99,235,0.08), 0 0 60px rgba(37,99,235,0.03); }
-                50% { box-shadow: 0 0 30px rgba(37,99,235,0.15), 0 0 80px rgba(37,99,235,0.05); }
+                0%, 100% { box-shadow: 0 0 20px rgba(249,115,22,0.08), 0 0 60px rgba(249,115,22,0.03); }
+                50% { box-shadow: 0 0 30px rgba(249,115,22,0.15), 0 0 80px rgba(249,115,22,0.05); }
               }
               @keyframes scanLine {
                 0% { transform: translateY(-100%); }
@@ -241,58 +242,56 @@ export default function CarrierSearchPage() {
               .step-enter { animation: stepFadeIn 0.3s ease-out forwards; }
             `}</style>
             <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-              <div className="scan-line absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent"></div>
+              <div className="scan-line absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/40 to-transparent"></div>
             </div>
             <div className="scan-glow absolute inset-0 rounded-xl pointer-events-none"></div>
 
-            <div className="relative z-10 px-xl py-lg border-b border-outline-variant bg-surface-container flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">radar</span>
+            <div className="relative z-10 px-6 py-4 border-b border-gray-800 bg-gray-900/80 flex items-center gap-3">
+              <span className="material-symbols-outlined text-orange-400">radar</span>
               <div>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">Verifying Carrier</h3>
-                <p className="text-xs text-on-surface-variant">Checking {mcNumber || dotNumber || 'carrier'} against FMCSA database</p>
+                <h3 className="text-sm font-semibold text-gray-100">Verifying Carrier</h3>
+                <p className="text-xs text-gray-400">Checking {mcNumber || dotNumber || 'carrier'} against FMCSA database</p>
               </div>
             </div>
 
-            <div className="h-1 bg-surface-variant relative overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-primary to-primary/60 transition-all duration-500 ease-out"
-                style={{ width: `${Math.min(((scanStep) / SCAN_STEPS.length) * 100, 100)}%` }} />
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+            <div className="h-1 bg-gray-800 relative overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 transition-all duration-500 ease-out"
                 style={{ width: `${Math.min(((scanStep) / SCAN_STEPS.length) * 100, 100)}%` }} />
             </div>
 
-            <div className="p-xl space-y-1">
+            <div className="p-6 space-y-1">
               {SCAN_STEPS.map((step, i) => {
                 const isActive = scanStep === i;
                 const isDone = scanStep > i;
                 return (
                   <div key={i} className={`step-enter flex items-center gap-4 py-2.5 px-4 rounded-xl transition-all duration-300 ${
-                    isActive ? 'bg-primary/5' : ''
+                    isActive ? 'bg-orange-500/10' : ''
                   }`} style={{ animationDelay: `${i * 80}ms` }}>
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 ${
-                      isDone ? 'bg-green-100 text-green-600 scale-100' :
-                      isActive ? 'bg-primary-container text-primary scale-110 shadow-md' :
-                      'bg-surface-container text-outline scale-100'
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500 ${
+                      isDone ? 'bg-green-500/10 text-green-400' :
+                      isActive ? 'bg-orange-500/10 text-orange-400 scale-110 shadow-sm' :
+                      'bg-gray-800 text-gray-400'
                     }`}>
                       <span className="material-symbols-outlined text-xl">
                         {isDone ? 'check_circle' : step.icon}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium transition-colors duration-500 ${
-                        isDone ? 'text-green-700' :
-                        isActive ? 'text-on-surface font-semibold' :
-                        'text-on-surface-variant/60'
+                      <p className={`text-sm transition-colors duration-500 ${
+                        isDone ? 'text-green-400 font-medium' :
+                        isActive ? 'text-gray-100 font-medium' :
+                        'text-gray-400'
                       }`}>{step.label}</p>
                     </div>
                     <div className="shrink-0">
                       {isActive && (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-primary font-bold">{Math.round(((i + 1) / SCAN_STEPS.length) * 100)}%</span>
-                          <span className="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+                          <span className="text-[10px] text-orange-400 font-bold">{Math.round(((i + 1) / SCAN_STEPS.length) * 100)}%</span>
+                          <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
                         </div>
                       )}
                       {isDone && (
-                        <span className="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+                        <span className="material-symbols-outlined text-green-400 text-lg">check_circle</span>
                       )}
                     </div>
                   </div>
@@ -303,80 +302,79 @@ export default function CarrierSearchPage() {
         )}
 
         {searchState === 'error' && (
-          <div className="border border-outline-variant rounded-xl bg-surface-container-lowest overflow-hidden">
-            <div className="p-xl flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-error-container rounded-2xl flex items-center justify-center mb-lg shadow-md">
-                <span className="material-symbols-outlined text-error text-3xl">search_off</span>
+          <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="p-8 flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mb-5">
+                <span className="material-symbols-outlined text-red-400 text-3xl">search_off</span>
               </div>
-              <h3 className="text-xl font-bold text-on-surface mb-2">Carrier Not Found</h3>
-              <p className="text-sm text-on-surface-variant max-w-sm">We couldn't find a carrier with this MC or DOT number. Please check the number and try again.</p>
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">Carrier Not Found</h3>
+              <p className="text-sm text-gray-400">
+              
+                We couldn't find <span className="font-semibold text-gray-200">{(mcNumber || dotNumber || 'this number').trim()}</span> in the FMCSA database.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Double-check for typos. MC numbers are 7 digits, DOT numbers are 7-8 digits.
+              </p>
               <button
                 onClick={() => setSearchState('empty')}
-                className="mt-lg h-11 px-6 bg-primary hover:brightness-110 text-on-primary font-bold rounded-xl shadow-md shadow-primary/20 transition-all flex items-center gap-2 active:scale-[0.98] text-sm"
+                className="mt-6 h-10 px-5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-400 rounded-lg transition-all shadow-sm flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-lg">refresh</span>
-                Search Again
+                Try Again
               </button>
             </div>
           </div>
         )}
 
-        {carrierResult && (() => {
+        {searchState === 'results' && carrierResult && (() => {
           const c = carrierResult;
           const recStyle = getRecommendationStyle(c.recommendation);
           const initials = c.legalName.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
           return (
-          <div className="space-y-lg">
+          <div className="space-y-6">
 
-            {/* ────── Section 1: Carrier Overview ────── */}
-            <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-              <div className="px-lg py-md border-b border-outline-variant bg-surface-container flex items-center gap-md">
-                <span className="material-symbols-outlined text-primary">local_shipping</span>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">Carrier Overview</h3>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-3.5 border-b border-gray-800 bg-gray-900/80 flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-400 text-lg">local_shipping</span>
+                <h3 className="text-sm font-semibold text-gray-100">Carrier Overview</h3>
               </div>
-              <div className="p-lg">
-                <div className="flex items-start justify-between gap-md flex-wrap">
-                  <div className="flex gap-lg items-start min-w-0">
-                    <div className="w-14 h-14 rounded-xl bg-primary-container flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">
+              <div className="p-6">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex gap-4 items-start min-w-0">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-white text-base font-bold shadow-sm shrink-0">
                       {initials}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-sm mb-1 flex-wrap">
-                        <h2 className="font-h2 text-h2 text-on-surface font-bold truncate">{c.legalName}</h2>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h2 className="text-lg font-semibold text-gray-100 truncate">{c.legalName}</h2>
                         {getStatusBadge(c.authorityStatus)}
                       </div>
                       {c.dbaName !== c.legalName && (
-                        <p className="text-body-sm text-on-surface-variant mb-1">DBA: {c.dbaName}</p>
+                        <p className="text-sm text-gray-400 mb-1">DBA: {c.dbaName}</p>
                       )}
-                      <div className="flex flex-wrap items-center gap-x-lg gap-y-1 text-body-sm text-on-surface-variant mt-1">
-                        <span className="bg-surface-container px-2 py-0.5 rounded font-semibold">DOT: {c.dotNumber || '—'}</span>
-                        <span className="bg-surface-container px-2 py-0.5 rounded font-semibold">MC: {c.mcNumber || '—'}</span>
-                        <span className="flex items-center gap-1">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400 mt-1">
+                        <span className="bg-gray-800 text-gray-400 px-2 py-0.5 rounded text-xs font-medium">DOT: {c.dotNumber || '—'}</span>
+                        <span className="bg-gray-800 text-gray-400 px-2 py-0.5 rounded text-xs font-medium">MC: {c.mcNumber || '—'}</span>
+                        <span className="flex items-center gap-1 text-xs">
                           <span className="material-symbols-outlined text-sm">location_on</span>
                           {c.city}, {c.state}
                         </span>
-                        {c.phone && (
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">call</span>
-                            {c.phone}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
-                    <div className={`px-3 py-1 rounded-lg border font-bold text-sm ${getScoreColor(c.riskScore)}`}>
+                    <div className={`px-3 py-1 rounded-lg border text-sm font-bold ${getScoreColor(c.riskScore)}`}>
                       Risk: {c.riskScore}/100
                     </div>
-                    <div className="flex items-center gap-md">
+                    <div className="flex items-center gap-3">
                       <Link href={`/carrier/${c.dotNumber}`}
-                        className="text-primary font-label-md hover:underline flex items-center gap-1">
+                        className="text-sm font-medium text-orange-400 hover:text-orange-500 flex items-center gap-1">
                         View Full Report
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
                       </Link>
                       <a href={getPdfDownloadUrl(c.dotNumber)}
                         target="_blank" rel="noopener noreferrer"
-                        className="text-outline font-label-md hover:text-primary transition-colors flex items-center gap-1">
+                        className="text-sm text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
                         PDF
                       </a>
@@ -384,118 +382,110 @@ export default function CarrierSearchPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-lg mt-lg pt-lg border-t border-outline-variant/50">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 pt-5 border-t border-gray-800">
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Authority Type</p>
-                    <p className="font-bold text-sm text-on-surface">{c.authorityType || '—'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Authority Type</p>
+                    <p className="text-sm font-semibold text-gray-100">{c.authorityType || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Authority Age</p>
-                    <p className="font-bold text-sm text-on-surface">{c.authorityAge || '—'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Authority Age</p>
+                    <p className="text-sm font-semibold text-gray-100">{c.authorityAge || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Fleet Size</p>
-                    <p className="font-bold text-sm text-on-surface">{c.powerUnits > 0 ? `${c.powerUnits} units` : 'N/A'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Fleet Size</p>
+                    <p className="text-sm font-semibold text-gray-100">{c.powerUnits > 0 ? `${c.powerUnits} units` : 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Drivers</p>
-                    <p className="font-bold text-sm text-on-surface">{c.drivers > 0 ? c.drivers : 'N/A'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Drivers</p>
+                    <p className="text-sm font-semibold text-gray-100">{c.drivers > 0 ? c.drivers : 'N/A'}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ────── Section 2: Safety & Compliance ────── */}
-            <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-              <div className="px-lg py-md border-b border-outline-variant bg-surface-container flex items-center gap-md">
-                <span className="material-symbols-outlined text-primary">shield</span>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">Safety & Compliance</h3>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-3.5 border-b border-gray-800 bg-gray-900/80 flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-400 text-lg">shield</span>
+                <h3 className="text-sm font-semibold text-gray-100">Safety & Compliance</h3>
               </div>
-              <div className="p-lg space-y-lg">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-lg">
-                  <div className="text-center p-md bg-surface-container rounded-xl">
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Safety Rating</p>
-                    <p className={`font-bold text-lg ${c.safetyRating === 'Satisfactory' ? 'text-green-600' : c.safetyRating === 'Conditional' ? 'text-yellow-600' : 'text-red-600'}`}>
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-gray-800/50 rounded-xl">
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Safety Rating</p>
+                    <p className={`text-lg font-bold ${c.safetyRating === 'Satisfactory' ? 'text-green-400' : c.safetyRating === 'Conditional' ? 'text-yellow-400' : 'text-red-400'}`}>
                       {c.safetyRating}
                     </p>
-                    <p className="text-[10px] text-outline mt-1">{c.safetyRatingDate}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{c.safetyRatingDate}</p>
                   </div>
-                  <div className="text-center p-md bg-surface-container rounded-xl">
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Inspections</p>
-                    <p className="font-bold text-lg text-on-surface">{c.inspections || 0}</p>
-                    <p className="text-[10px] text-outline mt-1">{c.vehicleInspections || 0} vehicle / {c.driverInspections || 0} driver</p>
+                  <div className="text-center p-4 bg-gray-800/50 rounded-xl">
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Inspections</p>
+                    <p className="text-lg font-bold text-gray-100">{c.inspections || 0}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{c.vehicleInspections || 0} vehicle / {c.driverInspections || 0} driver</p>
                   </div>
-                  <div className="text-center p-md bg-surface-container rounded-xl">
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Violations</p>
-                    <p className="font-bold text-lg text-on-surface">{c.violations || 0}</p>
-                    <p className="text-[10px] text-outline mt-1">on record</p>
+                  <div className="text-center p-4 bg-gray-800/50 rounded-xl">
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Violations</p>
+                    <p className="text-lg font-bold text-gray-100">{c.violations || 0}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">on record</p>
                   </div>
-                  <div className="text-center p-md bg-surface-container rounded-xl">
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Crashes (24mo)</p>
-                    <p className="font-bold text-lg text-on-surface">{c.crashTotal || 0}</p>
-                    <p className="text-[10px] text-outline mt-1">{c.fatalCrashes > 0 && `${c.fatalCrashes} fatal`}{c.fatalCrashes > 0 && c.injuryCrashes > 0 ? ' · ' : ''}{c.injuryCrashes > 0 && `${c.injuryCrashes} injury`}{c.fatalCrashes === 0 && c.injuryCrashes === 0 && c.towCrashes > 0 && `${c.towCrashes} tow`}</p>
+                  <div className="text-center p-4 bg-gray-800/50 rounded-xl">
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Crashes (24mo)</p>
+                    <p className="text-lg font-bold text-gray-100">{c.crashTotal || 0}</p>
+                    <p className="text-[10px] text-gray-400 mt-1">{c.fatalCrashes > 0 && `${c.fatalCrashes} fatal`}{c.fatalCrashes > 0 && c.injuryCrashes > 0 ? ' · ' : ''}{c.injuryCrashes > 0 && `${c.injuryCrashes} injury`}{c.fatalCrashes === 0 && c.injuryCrashes === 0 && c.towCrashes > 0 && `${c.towCrashes} tow`}</p>
                   </div>
                 </div>
 
-                <div className="bg-surface-container rounded-xl p-lg">
-                  <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-3">Out-of-Service Rates</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-md">
+                <div className="bg-gray-800/50 rounded-xl p-5">
+                  <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-3">Out-of-Service Rates</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-body-sm text-on-surface-variant">Vehicle OOS</p>
-                      <p className="font-bold text-sm text-on-surface">{c.vehicleOOSRate || '—'}</p>
+                      <p className="text-sm text-gray-400">Vehicle OOS</p>
+                      <p className="text-sm font-semibold text-gray-100">{c.vehicleOOSRate || '—'}</p>
                     </div>
                     <div>
-                      <p className="text-body-sm text-on-surface-variant">Driver OOS</p>
-                      <p className="font-bold text-sm text-on-surface">{c.driverOOSRate || '—'}</p>
+                      <p className="text-sm text-gray-400">Driver OOS</p>
+                      <p className="text-sm font-semibold text-gray-100">{c.driverOOSRate || '—'}</p>
                     </div>
                     <div>
-                      <p className="text-body-sm text-on-surface-variant">National Avg (Vehicle)</p>
-                      <p className="font-bold text-sm text-on-surface">{c.outOfServiceNationalAvg || '—'}</p>
+                      <p className="text-sm text-gray-400">National Avg (Vehicle)</p>
+                      <p className="text-sm font-semibold text-gray-100">{c.outOfServiceNationalAvg || '—'}</p>
                     </div>
                   </div>
-                  {c.oosComparison && (
-                    <div className={`mt-3 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${c.oosComparison.includes('Below') ? 'bg-green-50 text-green-700' : c.oosComparison.includes('Above') ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'}`}>
-                      <span className="material-symbols-outlined text-sm">{c.oosComparison.includes('Below') ? 'arrow_downward' : c.oosComparison.includes('Above') ? 'arrow_upward' : 'remove'}</span>
-                      {c.oosComparison}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* ────── Section 3: Insurance & Authority ────── */}
-            <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-              <div className="px-lg py-md border-b border-outline-variant bg-surface-container flex items-center gap-md">
-                <span className="material-symbols-outlined text-primary">verified</span>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">Insurance & Authority</h3>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-3.5 border-b border-gray-800 bg-gray-900/80 flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-400 text-lg">verified</span>
+                <h3 className="text-sm font-semibold text-gray-100">Insurance & Authority</h3>
               </div>
-              <div className="p-lg space-y-lg">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-lg">
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Authority Status</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Authority Status</p>
                     <div className="mt-1">{getStatusBadge(c.authorityStatus)}</div>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Authority Type</p>
-                    <p className="font-bold text-sm text-on-surface mt-1">{c.authorityType || '—'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Authority Type</p>
+                    <p className="text-sm font-semibold text-gray-100 mt-1">{c.authorityType || '—'}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-1">Authority Age</p>
-                    <p className="font-bold text-sm text-on-surface mt-1">{c.authorityAge || '—'}</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-1">Authority Age</p>
+                    <p className="text-sm font-semibold text-gray-100 mt-1">{c.authorityAge || '—'}</p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-md">
-                  <p className="text-[11px] uppercase text-outline font-bold tracking-wider">Cargo Authorized:</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mr-1">Cargo:</span>
                   {c.cargoTypes && c.cargoTypes.length > 0 ? (
                     c.cargoTypes.map((t, i) => (
-                      <span key={i} className="px-2 py-0.5 bg-primary-container/30 text-primary rounded text-xs font-semibold">{t}</span>
+                      <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-400 rounded text-xs font-medium">{t}</span>
                     ))
                   ) : (
-                    <span className="text-body-sm text-on-surface-variant">—</span>
+                    <span className="text-sm text-gray-400">—</span>
                   )}
                   {c.hazmatStatus && (
-                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-bold uppercase flex items-center gap-1">
+                    <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-400 rounded text-xs font-bold uppercase flex items-center gap-1">
                       <span className="material-symbols-outlined text-xs">warning</span>
                       Hazmat
                     </span>
@@ -504,27 +494,27 @@ export default function CarrierSearchPage() {
 
                 {c.insurance && c.insurance.length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-2">Insurance Policies</p>
-                    <div className="overflow-x-auto">
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-3">Insurance Policies</p>
+                    <div className="overflow-x-auto rounded-lg border border-gray-800">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-outline-variant/50">
-                            <th className="text-left py-2 pr-3 text-outline font-bold text-[11px] uppercase tracking-wider">Type</th>
-                            <th className="text-left py-2 pr-3 text-outline font-bold text-[11px] uppercase tracking-wider">Provider</th>
-                            <th className="text-left py-2 pr-3 text-outline font-bold text-[11px] uppercase tracking-wider">Coverage</th>
-                            <th className="text-left py-2 pr-3 text-outline font-bold text-[11px] uppercase tracking-wider">Expires</th>
-                            <th className="text-left py-2 text-outline font-bold text-[11px] uppercase tracking-wider">Status</th>
+                          <tr className="bg-gray-900 border-b border-gray-800">
+                            <th className="text-left py-2.5 px-4 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Type</th>
+                            <th className="text-left py-2.5 px-4 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Provider</th>
+                            <th className="text-left py-2.5 px-4 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Coverage</th>
+                            <th className="text-left py-2.5 px-4 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Expires</th>
+                            <th className="text-left py-2.5 px-4 text-gray-400 font-semibold text-[11px] uppercase tracking-wider">Status</th>
                           </tr>
                         </thead>
                         <tbody>
                           {c.insurance.map((p, i) => (
-                            <tr key={i} className="border-b border-outline-variant/30 last:border-0">
-                              <td className="py-2 pr-3 font-semibold text-on-surface">{p.policyType}</td>
-                              <td className="py-2 pr-3 text-on-surface-variant">{p.carrier}</td>
-                              <td className="py-2 pr-3 text-on-surface">{p.limit}</td>
-                              <td className="py-2 pr-3 text-on-surface-variant">{p.expiration}</td>
-                              <td className="py-2">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${p.status === 'VALID' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            <tr key={i} className="border-b border-gray-800/50 last:border-0">
+                              <td className="py-2.5 px-4 font-medium text-gray-100">{p.policyType}</td>
+                              <td className="py-2.5 px-4 text-gray-400">{p.carrier}</td>
+                              <td className="py-2.5 px-4 text-gray-100">{p.limit}</td>
+                              <td className="py-2.5 px-4 text-gray-400">{p.expiration}</td>
+                              <td className="py-2.5 px-4">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${p.status === 'VALID' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
                                   {p.status}
                                 </span>
                               </td>
@@ -538,85 +528,73 @@ export default function CarrierSearchPage() {
               </div>
             </div>
 
-            {/* ────── Section 4: Risk Analysis ────── */}
-            <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-              <div className="px-lg py-md border-b border-outline-variant bg-surface-container flex items-center gap-md">
-                <span className="material-symbols-outlined text-primary">analytics</span>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">Risk Analysis</h3>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-3.5 border-b border-gray-800 bg-gray-900/80 flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-400 text-lg">analytics</span>
+                <h3 className="text-sm font-semibold text-gray-100">Risk Analysis</h3>
               </div>
-              <div className="p-lg">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-lg items-start">
-                  <div className="lg:col-span-2 flex flex-col items-center justify-center p-xl bg-surface-container rounded-xl text-center">
-                    <div className={`w-28 h-28 rounded-full ${getScoreBg(c.riskScore)} flex flex-col items-center justify-center shadow-lg mb-md`}>
-                      <span className="text-3xl font-bold text-white leading-none">{c.riskScore}</span>
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+                  <div className="lg:col-span-2 flex flex-col items-center justify-center p-6 bg-gray-800/50 rounded-xl text-center">
+                    <div className={`w-24 h-24 rounded-full ${getScoreBg(c.riskScore)} flex flex-col items-center justify-center shadow-sm mb-4`}>
+                      <span className="text-2xl font-bold text-white leading-none">{c.riskScore}</span>
                       <span className="text-white/70 text-xs mt-0.5">/ 100</span>
                     </div>
-                    <div className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full border font-bold text-sm ${recStyle.bgLight} ${recStyle.text} ${recStyle.border}`}>
+                    <div className={`inline-flex items-center gap-1 px-4 py-1.5 rounded-full border text-sm font-bold ${recStyle.bgLight} ${recStyle.text} ${recStyle.border}`}>
                       <span className="material-symbols-outlined text-lg">{recStyle.icon}</span>
                       {c.recommendation}
                     </div>
                   </div>
 
                   <div className="lg:col-span-3 space-y-3">
-                    <p className="text-[11px] uppercase text-outline font-bold tracking-wider mb-2">Score Breakdown</p>
+                    <p className="text-[11px] uppercase text-gray-500 font-semibold tracking-wider mb-2">Score Breakdown</p>
                     {c.riskBreakdown && c.riskBreakdown.length > 0 ? (
                       <div className="space-y-1.5">
                         {c.riskBreakdown.map((f, i) => (
-                          <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-surface-container">
+                          <div key={i} className="flex items-center justify-between py-2 px-3.5 rounded-lg bg-gray-800/50">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${f.impact >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                              <span className="text-sm font-medium text-on-surface truncate">{f.factor}</span>
-                              <span className="text-xs text-on-surface-variant hidden sm:inline truncate">{f.description}</span>
+                              <span className="text-sm font-medium text-gray-100 truncate">{f.factor}</span>
+                              <span className="text-xs text-gray-400 hidden sm:inline truncate">{f.description}</span>
                             </div>
-                            <span className={`text-sm font-bold shrink-0 ml-2 ${f.impact >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <span className={`text-sm font-bold shrink-0 ml-2 ${f.impact >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               {f.impact >= 0 ? '+' : ''}{f.impact}
                             </span>
                           </div>
                         ))}
-                        <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-primary-container/20 border border-primary-container/30 mt-2">
-                          <span className="text-sm font-bold text-on-surface">Total Risk Score</span>
-                          <span className={`text-lg font-bold ${c.riskScore >= 70 ? 'text-green-600' : c.riskScore >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                        <div className="flex items-center justify-between py-2.5 px-3.5 rounded-lg bg-orange-500/10 border border-orange-500/30 mt-2">
+                          <span className="text-sm font-bold text-gray-100">Total Risk Score</span>
+                          <span className={`text-lg font-bold ${c.riskScore >= 70 ? 'text-green-400' : c.riskScore >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
                             {c.riskScore}/100
                           </span>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-body-sm text-on-surface-variant">Score: {c.riskScore}/100</p>
-                    )}
-
-                    {c.oosComparison && (
-                      <div className="flex items-center gap-2 pt-2">
-                        <span className="text-[11px] uppercase text-outline font-bold tracking-wider">OOS vs National Avg:</span>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${c.oosComparison.includes('Below') ? 'bg-green-50 text-green-700' : c.oosComparison.includes('Above') ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-700'}`}>
-                          <span className="material-symbols-outlined text-sm">{c.oosComparison.includes('Below') ? 'check_circle' : c.oosComparison.includes('Above') ? 'error' : 'remove_circle'}</span>
-                          {c.oosComparison}
-                        </span>
-                      </div>
+                      <p className="text-sm text-gray-400">Score: {c.riskScore}/100</p>
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ────── Section 5: AI Recommendation ────── */}
-            <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-lowest">
-              <div className="px-lg py-md border-b border-outline-variant bg-surface-container flex items-center gap-md">
-                <span className="material-symbols-outlined text-primary">auto_awesome</span>
-                <h3 className="font-h3 text-h3 font-semibold text-on-surface">AI Recommendation</h3>
+            <div className="bg-gray-900/60 border border-gray-800 rounded-xl overflow-hidden shadow-sm">
+              <div className="px-6 py-3.5 border-b border-gray-800 bg-gray-900/80 flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-orange-400 text-lg">auto_awesome</span>
+                <h3 className="text-sm font-semibold text-gray-100">AI Recommendation</h3>
               </div>
-              <div className="p-lg">
+              <div className="p-6">
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 rounded-full ${recStyle.bgLight} flex items-center justify-center shrink-0`}>
                     <span className={`material-symbols-outlined ${recStyle.text}`}>psychology</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-body-sm text-on-surface leading-relaxed">{c.aiSummary}</p>
-                    <div className="flex flex-wrap items-center gap-x-lg gap-y-1 mt-4 pt-3 border-t border-outline-variant/50">
-                      <span className="text-xs text-outline flex items-center gap-1">
+                    <p className="text-sm text-gray-200 leading-relaxed">{c.aiSummary}</p>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-4 pt-3.5 border-t border-gray-800">
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">schedule</span>
                         Last updated: {formatDate(c.lastUpdated)}
                       </span>
-                      <span className="text-xs text-outline flex items-center gap-1">
+                      <span className="text-xs text-gray-400 flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">database</span>
                         Source: {c.dataSource}
                       </span>
@@ -630,71 +608,53 @@ export default function CarrierSearchPage() {
           );
         })()}
 
-        <section className="space-y-md">
-          <div className="flex items-center justify-between">
-            <h3 className="font-h3 text-h3 font-semibold text-on-surface flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary">history</span>
-              Recent Searches
-            </h3>
+        <section>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2.5">
+              <span className="material-symbols-outlined text-gray-400 text-lg">history</span>
+              <h3 className="text-base font-semibold text-gray-100">Recent Searches</h3>
+            </div>
           </div>
           {recentSearches.length === 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
-              {[
-                { name: 'Swift Trans Corp', mc: '882319', dot: '2910331', status: 'Active', statusClass: 'bg-green-100 text-green-700', time: '2h ago' },
-                { name: 'Apex Logistics LLC', mc: '991204', dot: '3310928', status: 'Pending', statusClass: 'bg-yellow-100 text-yellow-700', time: '5h ago' },
-                { name: 'Red Line Hauling', mc: '552101', dot: '1120485', status: 'Revoked', statusClass: 'bg-red-100 text-red-700', time: '1d ago' },
-              ].map((item, i) => (
-                <Link key={i} href={`/carrier/${item.dot}`} className="p-md bg-surface-container-low border border-outline-variant rounded-xl hover:border-primary transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-sm">
-                    <div className="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center text-primary">
-                      <span className="material-symbols-outlined">local_shipping</span>
-                    </div>
-                    <span className={`px-2 py-0.5 ${item.statusClass} rounded text-[10px] font-bold uppercase`}>{item.status}</span>
-                  </div>
-                  <p className="font-label-md text-on-surface mb-xs group-hover:text-primary transition-colors">{item.name}</p>
-                  <p className="text-xs text-on-surface-variant flex items-center gap-xs">
-                    <span className="font-semibold">MC:</span> {item.mc} • <span className="font-semibold ml-1">DOT:</span> {item.dot}
-                  </p>
-                  <div className="mt-md pt-md border-t border-outline-variant/30 flex items-center justify-between">
-                    <span className="text-[10px] text-outline">{item.time}</span>
-                    <span className="material-symbols-outlined text-sm text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                  </div>
-                </Link>
-              ))}
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-12 h-12 bg-gray-800/60 rounded-xl flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-gray-500 text-2xl">manage_search</span>
+              </div>
+              <p className="text-sm text-gray-400">No recent searches yet. Your last 6 lookups will appear here.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {recentSearches.map((item) => (
-                <Link key={item.id} href={`/carrier/${item.dot_number}`} className="p-md bg-surface-container-low border border-outline-variant rounded-xl hover:border-primary transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-sm">
-                    <div className="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center text-primary">
+                <Link key={item.id} href={`/carrier/${item.dot_number}`} className="p-4 bg-gray-900/60 border border-gray-800 rounded-xl hover:border-orange-500 transition-all cursor-pointer group shadow-sm">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
                       <span className="material-symbols-outlined">local_shipping</span>
                     </div>
                     {item.risk_score >= 70 ? (
-                      <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">Active</span>
+                      <span className="px-2 py-0.5 bg-green-500/10 text-green-400 rounded text-[10px] font-bold uppercase">Active</span>
                     ) : item.risk_score >= 40 ? (
-                      <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold uppercase">Caution</span>
+                      <span className="px-2 py-0.5 bg-yellow-500/10 text-yellow-400 rounded text-[10px] font-bold uppercase">Caution</span>
                     ) : (
-                      <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase">High Risk</span>
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px] font-bold uppercase">High Risk</span>
                     )}
                   </div>
-                  <p className="font-label-md text-on-surface mb-xs group-hover:text-primary transition-colors truncate">{item.carrier_name}</p>
-                  <p className="text-xs text-on-surface-variant flex items-center gap-xs">
-                    <span className="font-semibold">MC:</span> {item.mc_number} • <span className="font-semibold ml-1">DOT:</span> {item.dot_number}
+                  <p className="text-sm font-medium text-gray-100 mb-1.5 group-hover:text-orange-400 transition-colors truncate">{item.carrier_name}</p>
+                  <p className="text-xs text-gray-400">
+                    <span className="font-medium">MC:</span> {item.mc_number} &middot; <span className="font-medium">DOT:</span> {item.dot_number}
                   </p>
-                  <div className="mt-md pt-md border-t border-outline-variant/30 flex items-center justify-between">
-                    <span className="text-[10px] text-outline">{new Date(item.created_at).toLocaleDateString()}</span>
-                    <span className="material-symbols-outlined text-sm text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
+                    <span className="text-[10px] text-gray-400">{new Date(item.created_at).toLocaleDateString()}</span>
+                    <span className="material-symbols-outlined text-sm text-gray-400 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                   </div>
                 </Link>
               ))}
             </div>
           )}
           {recentSearches.length > 0 && (
-            <div className="flex justify-center pt-sm">
+            <div className="flex justify-center mt-4">
               <button
                 onClick={handleClearHistory}
-                className="text-sm text-outline hover:text-error transition-colors flex items-center gap-1 px-lg py-2 rounded-lg hover:bg-surface-container"
+                className="text-sm text-gray-400 hover:text-red-400 transition-colors flex items-center gap-1.5 px-4 py-2 rounded-lg hover:bg-gray-800/50"
               >
                 <span className="material-symbols-outlined text-sm">delete</span>
                 Clear History
@@ -704,14 +664,14 @@ export default function CarrierSearchPage() {
         </section>
       </div>
       {showToast && (
-        <div className="fixed bottom-lg right-lg z-50">
-          <div className="bg-inverse-surface text-inverse-on-surface px-lg py-md rounded-xl shadow-2xl flex items-center gap-md border border-outline-variant toast-entrance">
-            <span className="material-symbols-outlined text-error">error</span>
+        <div className="fixed bottom-6 right-6 z-50">
+          <div className="bg-gray-900 border border-gray-700 text-gray-100 px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 border-gray-700 toast-entrance">
+            <span className="material-symbols-outlined text-red-400">error</span>
             <div>
-              <p className="font-label-md">Search Error</p>
-              <p className="text-xs opacity-80">{toastMessage}</p>
+              <p className="text-sm font-medium">Search Error</p>
+              <p className="text-xs text-gray-400">{toastMessage}</p>
             </div>
-            <button className="ml-xl hover:opacity-70" onClick={() => setShowToast(false)}>
+            <button className="ml-4 hover:opacity-70" onClick={() => setShowToast(false)}>
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
           </div>

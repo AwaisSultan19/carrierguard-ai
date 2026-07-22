@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 import { useAuth } from '@clerk/nextjs';
+import { usePathname } from 'next/navigation';
 import { getDashboardStats, type DashboardStats } from '@/lib/api';
 
 function getTimeAgo(dateStr: string) {
@@ -22,10 +23,12 @@ function getTimeAgo(dateStr: string) {
 
 export default function DashboardPage() {
   const { getToken } = useAuth();
+  const pathname = usePathname();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
+    setLoading(true);
     getToken().then((token) =>
       getDashboardStats(token)
     ).then((data) => {
@@ -36,16 +39,20 @@ export default function DashboardPage() {
     });
   }, [getToken]);
 
+  useEffect(() => {
+    loadStats();
+  }, [loadStats, pathname]);
+
   return (
-    <div className="flex-1 overflow-y-auto p-gutter custom-scrollbar relative">
+    <div className="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar relative bg-gray-950">
           {/* Page Header */}
-          <div className="flex justify-between items-end mb-xl">
+          <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="font-h1 text-h1 text-on-surface">Compliance Dashboard</h2>
-              <p className="font-body-md text-body-md text-on-surface-variant mt-xs">Real-time carrier vetting and risk assessment overview.</p>
+              <h2 className="text-2xl font-semibold text-gray-100">Compliance Dashboard</h2>
+              <p className="text-sm text-gray-400 mt-xs">Real-time carrier vetting and risk assessment overview.</p>
             </div>
-            <div className="flex gap-md">
-              <Link href="/search" className="flex items-center gap-sm px-lg h-10 bg-primary text-white rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity shadow-md">
+            <div className="flex gap-3">
+              <Link href="/search" className="flex items-center gap-2 px-5 h-10 bg-orange-500 text-white rounded-lg text-xs hover:bg-orange-400 transition-opacity shadow-sm">
                 <span className="material-symbols-outlined text-[18px]">add</span>
                 New Search
               </Link>
@@ -53,73 +60,73 @@ export default function DashboardPage() {
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-lg mb-xl">
-            <div className="glass-card p-lg rounded-xl flex flex-col justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl flex flex-col justify-between">
               <div>
-                <h4 className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Total Carriers Vetted</h4>
-                <p className="font-h2 text-h2 text-on-surface">{stats?.totalCarriersVetted ?? 0}</p>
+                <h4 className="text-[11px] text-gray-400 uppercase tracking-wider mb-xs">Total Carriers Vetted</h4>
+                <p className="text-xl font-semibold text-gray-100">{stats?.totalCarriersVetted ?? 0}</p>
               </div>
             </div>
             
-            <div className="glass-card p-lg rounded-xl flex flex-col justify-between">
+            <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl flex flex-col justify-between">
               <div>
-                <h4 className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs">Avg. Risk Score</h4>
-                <p className="font-h2 text-h2 text-on-surface">{stats?.averageRiskScore ?? 0}</p>
+                <h4 className="text-[11px] text-gray-400 uppercase tracking-wider mb-xs">Avg. Risk Score</h4>
+                <p className="text-xl font-semibold text-gray-100">{stats?.averageRiskScore ?? 0}</p>
               </div>
             </div>
           </div>
 
           {loading ? (
-            <div className="glass-card p-lg rounded-xl flex flex-col">
-              <div className="h-6 w-40 skeleton rounded-lg mb-lg"></div>
+            <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl flex flex-col">
+              <div className="h-6 w-40 bg-gray-800 animate-pulse rounded-lg mb-4"></div>
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-16 skeleton rounded-lg mb-md"></div>
+                <div key={i} className="h-16 bg-gray-800 animate-pulse rounded-lg mb-3"></div>
               ))}
             </div>
           ) : (
-          <div className="glass-card p-lg rounded-xl flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center mb-xl">
-              <h3 className="font-h3 text-h3 text-on-surface">Recent Carrier Checks</h3>
-              <Link href="/history" className="text-primary font-label-md text-label-md hover:underline">View All</Link>
+          <div className="bg-gray-900/60 border border-gray-800 p-5 rounded-xl flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-base font-semibold text-gray-100">Recent Carrier Checks</h3>
+              <Link href="/history" className="text-orange-400 text-xs hover:underline">View All</Link>
             </div>
             {stats && stats.recentChecks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-xl text-center">
-                <span className="material-symbols-outlined text-4xl text-outline mb-md">search_off</span>
-                <p className="text-on-surface-variant">No checks yet. Search for a carrier to get started.</p>
+                <span className="material-symbols-outlined text-4xl text-gray-500 mb-3">search_off</span>
+                <p className="text-gray-400">No checks yet. Search for a carrier to get started.</p>
               </div>
             ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-md py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Carrier Name</th>
-                    <th className="px-md py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">MC#</th>
-                    <th className="px-md py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Vetting Score</th>
-                    <th className="px-md py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Last Checked</th>
-                    <th className="px-md py-md font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+                  <tr className="bg-gray-900 border-b border-gray-800">
+                    <th className="px-4 py-4 text-[11px] text-gray-400 uppercase tracking-wider">Carrier Name</th>
+                    <th className="px-4 py-4 text-[11px] text-gray-400 uppercase tracking-wider">MC#</th>
+                    <th className="px-4 py-4 text-[11px] text-gray-400 uppercase tracking-wider">Vetting Score</th>
+                    <th className="px-4 py-4 text-[11px] text-gray-400 uppercase tracking-wider">Last Checked</th>
+                    <th className="px-4 py-4 text-[11px] text-gray-400 uppercase tracking-wider text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-outline-variant">
+                <tbody className="divide-y divide-gray-800/50">
                   {stats?.recentChecks.map((check) => {
                     const initial = (check.carrier_name || '?')[0].toUpperCase();
                     const scoreColor = check.risk_score >= 70 ? 'bg-green-100 text-green-700' : check.risk_score >= 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-700';
                     const scoreLabel = check.risk_score >= 70 ? 'Low Risk' : check.risk_score >= 40 ? 'Caution' : 'Critical';
                     const timeAgo = getTimeAgo(check.created_at);
                     return (
-                  <tr key={check.id} className="hover:bg-surface-container-low transition-colors group">
-                    <td className="px-md py-md">
-                      <div className="flex items-center gap-sm">
-                        <div className="w-8 h-8 rounded bg-surface-container flex items-center justify-center font-bold text-primary">{initial}</div>
-                        <span className="font-body-sm text-body-sm text-on-surface font-semibold">{check.carrier_name}</span>
+                  <tr key={check.id} className="hover:bg-gray-800/30 transition-colors group">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded bg-gray-800/50 flex items-center justify-center font-bold text-orange-400">{initial}</div>
+                        <span className="text-sm text-gray-100 font-semibold">{check.carrier_name}</span>
                       </div>
                     </td>
-                    <td className="px-md py-md font-body-sm text-body-sm text-on-surface">MC-{check.mc_number}</td>
-                    <td className="px-md py-md">
+                    <td className="px-4 py-4 text-sm text-gray-100">{check.mc_number ? `MC-${check.mc_number}` : '—'}</td>
+                    <td className="px-4 py-4">
                       <span className={`inline-flex items-center px-sm py-xs ${scoreColor} text-[10px] font-bold rounded uppercase`}>{check.risk_score} - {scoreLabel}</span>
                     </td>
-                    <td className="px-md py-md font-body-sm text-body-sm text-on-surface-variant">{timeAgo}</td>
-                    <td className="px-md py-md text-right">
-                      <Link href={`/carrier/${check.dot_number}`} className="p-xs hover:bg-primary/10 rounded-full inline-flex transition-colors text-on-surface-variant hover:text-primary">
+                    <td className="px-4 py-4 text-sm text-gray-400">{timeAgo}</td>
+                    <td className="px-4 py-4 text-right">
+                      <Link href={`/carrier/${check.dot_number}`} className="p-xs hover:bg-orange-500/10 rounded-full inline-flex transition-colors text-gray-400 hover:text-orange-400">
                         <span className="material-symbols-outlined text-[20px]">chevron_right</span>
                       </Link>
                     </td>
@@ -136,4 +143,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

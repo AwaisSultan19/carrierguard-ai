@@ -28,7 +28,7 @@ export default function SignUpPage() {
               footer: "hidden",
             },
           }}
-          fallbackRedirectUrl="/dashboard"
+          fallbackRedirectUrl="/onboarding"
         />
       </main>
     </div>

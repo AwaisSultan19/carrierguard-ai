@@ -43,4 +43,29 @@ async function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth };
+async function softAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    req.userId = null;
+    return next();
+  }
+
+  const client = getClerkClient();
+  if (!client) {
+    req.userId = 'dev_user';
+    return next();
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const { userId } = await client.verifyToken(token);
+    req.userId = userId;
+  } catch {
+    req.userId = null;
+  }
+  next();
+}
+
+module.exports = { requireAuth, softAuth };

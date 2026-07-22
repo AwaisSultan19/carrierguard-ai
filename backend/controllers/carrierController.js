@@ -40,7 +40,12 @@ async function searchCarrier(req, res, next) {
       }
     }
 
-    await supabaseService.saveCarrierCheck(req.userId, carrier);
+    if (req.userId) {
+      console.log(`[Search] Saving carrier check for userId=${req.userId}`);
+      await supabaseService.saveCarrierCheck(req.userId, carrier);
+    } else {
+      console.warn('[Search] No userId — carrier check NOT saved (auth issue)');
+    }
 
     res.json({
       success: true,
@@ -54,7 +59,7 @@ async function searchCarrier(req, res, next) {
 async function getCarrierById(req, res, next) {
   try {
     const { id } = req.params;
-    const idType = req.query.type || (id.startsWith('MC') || id.startsWith('mc') ? 'mc' : 'dot');
+    const { type } = req.query;
 
     if (!id) {
       const error = new Error('Carrier ID is required');
@@ -62,9 +67,34 @@ async function getCarrierById(req, res, next) {
       throw error;
     }
 
-    const cleanId = id.replace(/^(MC|DOT)-?/i, '');
-    const params = idType === 'mc' ? { mcNumber: cleanId } : { dotNumber: cleanId };
-    const carrier = await fmcsaService.searchCarrier(params);
+    const cleanId = id.replace(/^(MC|DOT)-?/i, '').trim();
+    if (!cleanId) {
+      const error = new Error('Invalid carrier ID format');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const isDotPrefix = id.toUpperCase().startsWith('DOT');
+    const isMcPrefix = id.toUpperCase().startsWith('MC');
+    const isNumericOnly = /^\d+$/.test(cleanId);
+
+    let carrier;
+
+    if (type === 'dot' || isDotPrefix) {
+      carrier = await fmcsaService.searchCarrier({ dotNumber: cleanId });
+    } else if (type === 'mc' || isMcPrefix) {
+      carrier = await fmcsaService.searchCarrier({ mcNumber: cleanId });
+    } else if (isNumericOnly) {
+      // Plain numeric IDs come from dashboard/history links that use DOT numbers.
+      // Try DOT first, then fall back to MC.
+      try {
+        carrier = await fmcsaService.searchCarrier({ dotNumber: cleanId });
+      } catch (dotErr) {
+        carrier = await fmcsaService.searchCarrier({ mcNumber: cleanId });
+      }
+    } else {
+      carrier = await fmcsaService.searchCarrier({ mcNumber: cleanId });
+    }
 
     res.json({
       success: true,
